@@ -1,0 +1,11 @@
+/.idea/*
+.DS_Store
+/captures
+Thumbs.db
+
+# Log Files
+*.log
+
+# Configuration Server
+mimetypes.json
+settings.json

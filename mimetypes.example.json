@@ -1,0 +1,32 @@
+{
+    "default": {
+        "binary": false, "content-type": "text/plain"
+    },
+    "html": {
+        "binary": true, "content-type": "text/html; charset=utf-8"
+    },
+    "js": {
+        "binary": false, "content-type": "application/javascript"
+    },
+    "css": {
+        "binary": false, "content-type": "text/css"
+    },
+    "json": {
+        "binary": false, "content-type": "application/json"
+    },
+    "txt": {
+        "binary": false, "content-type": "text/plain"
+    },
+    "png": {
+        "binary": true, "content-type": "image/png"
+    },
+    "jpg": {
+        "binary": true, "content-type": "image/jpeg"
+    },
+    "jpeg": {
+        "binary": true, "content-type": "image/jpeg"
+    },
+    "gif": {
+        "binary": true, "content-type": "image/gif"
+    }
+}

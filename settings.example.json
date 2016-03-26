@@ -1,0 +1,8 @@
+{
+    "server_name": "ErickMRServer/0.5",
+    "log_requests_file_name": "serverhttp_requests.log",
+    "log_server_file_name": "serverhttp_events.log",
+    "port_listening": 8080,
+    "ip_listening": "localhost",
+    "default_index": ["index.html", "home.html"]
+}

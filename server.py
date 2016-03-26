@@ -6,20 +6,22 @@ import time
 import socket
 import json
 import os
+from jsonschema import validate, ValidationError
 
+settings = dict()
 # nombre del servidor
-server_name = 'ErickMRServer/0.5'
+settings['server_name'] = 'ErickMRServer/0.5'
 # nombre del archivo de bitacora
-log_requests_file_name = 'serverhttp_requests.log'
-log_server_file_name = 'serverhttp_events.log'
+settings['log_requests_file_name'] = 'serverhttp_requests.log'
+settings['log_server_file_name'] = 'serverhttp_events.log'
 # carpeta de donde se encuentran los documentos
-htdocs_folder = 'htdocs'
+settings['htdocs_folder'] = 'htdocs'
 # numero de puerto para escuchar
-port_listening = 8080
+settings['port_listening'] = 8080
 # direccion ip donde escuchar
-ip_listening = ''
+settings['ip_listening'] = ''
 # indices por default
-default_index = ('index.html', 'home.html')
+settings['default_index'] = ['index.html']
 
 # Recursos
 mime_types = None
@@ -40,7 +42,8 @@ def procesar_cabeceras(diccionario, cadena_texto):
     (recurso, version_http) = dividido.pop(0).split(' ')
     (diccionario['recurso_solicitado'], discard, diccionario['parametros_url']) = recurso.partition('?')
     diccionario['recurso_solicitado_extension'] = diccionario['recurso_solicitado'].rsplit('/', 1)[1]
-    (discard_prove, discard, diccionario['recurso_solicitado_extension']) = diccionario['recurso_solicitado_extension'].rpartition('.')
+    (discard_prove, discard, diccionario['recurso_solicitado_extension']) = diccionario[
+        'recurso_solicitado_extension'].rpartition('.')
     if discard_prove == '':
         diccionario['recurso_solicitado_extension'] = ''
     diccionario['version_http'] = version_http
@@ -53,16 +56,16 @@ def procesar_cabeceras(diccionario, cadena_texto):
 
 def obtener_datos_archivo(filename, extension):
     print('/*******************************************************************/')
-    filename = htdocs_folder+filename
-    print('param: filename='+filename+' extension='+extension)
+    filename = settings['htdocs_folder'] + filename
+    print('param: filename=' + filename + ' extension=' + extension)
     if filename == '' or filename[-1] == '/':
-        for filename_index in default_index:
+        for filename_index in settings['default_index']:
             print(filename + filename_index)
             if os.path.isfile(filename + filename_index):
                 filename += filename_index
                 (discard, discard, extension) = filename_index.rpartition('.')
                 break
-    if extension not in mime_types or 'content-type' not in mime_types[extension]:
+    if extension not in mime_types:
         extension = 'default'
     type_file_read = 'r'
     if 'binary' in mime_types[extension] and mime_types[extension]['binary'] == True:
@@ -70,8 +73,8 @@ def obtener_datos_archivo(filename, extension):
     mime_type_file = ''
     archivo = None
     if filename != '':
-        print('filename: '+filename+' | htdocs_folder: '+htdocs_folder)
-        if '..' not in os.path.relpath(filename, htdocs_folder):
+        print('filename: ' + filename + ' | htdocs_folder: ' + settings['htdocs_folder'])
+        if '..' not in os.path.relpath(filename, settings['htdocs_folder']):
             try:
                 print("voy a ver")
                 print("type_file_read->", type_file_read)
@@ -112,15 +115,12 @@ def process_petition(socket_cliente, log_queue):
         return
     elif metodo_http == b'GET ':
         texto_bitacora += 'GET, '
-        cabeceras_respuesta += respuesta_http['200']
     elif metodo_http == b'POST':
         texto_bitacora += 'POST, '
         socket_cliente.recv(1)
-        cabeceras_respuesta += respuesta_http['404']
     elif metodo_http == b'HEAD':
         texto_bitacora += 'HEAD, '
         socket_cliente.recv(1)
-        cabeceras_respuesta += respuesta_http['406']
     else:
         texto_bitacora += 'ERROR, '
         error_solicitud = True
@@ -135,12 +135,12 @@ def process_petition(socket_cliente, log_queue):
         cabeceras = dict()
         cuerpo = b''
         while 1:
-                solicitud += buffer.decode()
-                if solicitud.find("\r\n\r\n") != -1:
-                    (texto_cabeceras, cuerpo) = solicitud.split("\r\n\r\n")
-                    procesar_cabeceras(cabeceras, texto_cabeceras)
-                    break
-                buffer = socket_cliente.recv(4)
+            solicitud += buffer.decode()
+            if solicitud.find("\r\n\r\n") != -1:
+                (texto_cabeceras, cuerpo) = solicitud.split("\r\n\r\n")
+                procesar_cabeceras(cabeceras, texto_cabeceras)
+                break
+            buffer = socket_cliente.recv(4)
         texto_bitacora += cabeceras['recurso_solicitado'] + ', '
         texto_bitacora += cabeceras['parametros_url']
 
@@ -155,9 +155,9 @@ def process_petition(socket_cliente, log_queue):
 
         # verificar MIME
         (archivo, content_type, codificar) = obtener_datos_archivo(
-                                                            cabeceras['recurso_solicitado'],
-                                                            cabeceras['recurso_solicitado_extension']
-                                                        )
+            cabeceras['recurso_solicitado'],
+            cabeceras['recurso_solicitado_extension']
+        )
 
         # verificar tipo compatible
         tipo_aceptado = True
@@ -184,6 +184,7 @@ def process_petition(socket_cliente, log_queue):
                 if archivo.readable():
                     cuerpo_respuesta = archivo.read()
                     if codificar:
+                        print(cuerpo_respuesta)
                         cuerpo_respuesta = cuerpo_respuesta.encode()
                     cabeceras_respuesta = respuesta_http['200']
                 else:
@@ -199,7 +200,7 @@ def process_petition(socket_cliente, log_queue):
     else:
         texto_bitacora += ', '
     cabeceras_respuesta += 'Date: ' + fecha + '\r\n'
-    cabeceras_respuesta += 'Server: ' + server_name + '\r\n'
+    cabeceras_respuesta += 'Server: ' + settings['server_name'] + '\r\n'
     cabeceras_respuesta += 'Content-Length: ' + str(len(cuerpo_respuesta)) + '\r\n'
     cabeceras_respuesta += '\r\n'
     respuesta = cabeceras_respuesta.encode() + cuerpo_respuesta
@@ -221,7 +222,7 @@ def bitacora(cola_bitacora):
     :return: no devuelve nada
     """
 
-    log_requests = open(log_requests_file_name, 'a')
+    log_requests = open(settings['log_requests_file_name'], 'a')
     while True:
         m = cola_bitacora.get()
         log_requests.write(str(m) + '\n')
@@ -229,10 +230,108 @@ def bitacora(cola_bitacora):
     log_requests.close()
 
 
+def load_settings():
+    global mime_types
+    schema_settings = {
+        "type": "object",
+        "properties": {
+            "server_name": {
+                "type": "string"
+            },
+            "log_requests_file_name": {
+                "type": "string"
+            },
+            "log_server_file_name": {
+                "type": "string"
+            },
+            "htdocs_folder": {
+                "type": "string"
+            },
+            "port_listening": {
+                "type": "integer",
+                "minimum": 0
+            },
+            "ip_listening": {
+                "type": "string"
+            },
+            "default_index": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+
+            }
+        },
+        "additionalProperties": False
+    }
+    schema_mime_types = {
+        "type": "object",
+        "patternProperties": {
+            "([A-z]|[0-9]|-|_)+$": {
+                "type": "object",
+                "properties": {
+                    "binary": {
+                        "type": "boolean"
+                    },
+                    "content-type": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "content-type"
+                ]
+            }
+        },
+        "additionalProperties": False,
+        "required": [
+            "default"
+        ]
+    }
+    try:
+        mime_types = json.load(open('mimetypes.json'))
+    except json.JSONDecodeError:
+        log_server.write('ERROR: el archivo mimetypes.json no es valido\n')
+        return False
+    except OSError:
+        log_server.write('ERROR: el archivo mimetypes.json no existe o no cuenta con permisos de lectura\n')
+        return False
+    try:
+        validate(mime_types, schema_mime_types)
+    except ValidationError as e:
+        log_server.write('ERROR: problema con el archivo mimetypes.json\n<-------------------\_/------------------->\n')
+        log_server.write(repr(e))
+        log_server.write('\n<-------------------/^\------------------->\n')
+        return False
+
+    try:
+        settings_file = json.load(open('settings.json'))
+    except json.JSONDecodeError:
+        log_server.write('ERROR: el archivo settings.json no es valido\nUsando configuración por defecto\n')
+        return True
+    except OSError:
+        log_server.write('ERROR: el archivo settings.json no existe o no cuenta con permisos de lectura\n')
+        log_server.write('Usando configuración por defecto\n')
+        return True
+    try:
+        validate(settings_file, schema_settings)
+    except ValidationError as e:
+        log_server.write('ERROR: problema con el archivo settings.json\n')
+        log_server.write('<-------------------\_/------------------->\n\n')
+        log_server.write(repr(e))
+        log_server.write('\n<-------------------/^\------------------->\n')
+        log_server.write('Usando configuración por defecto\n')
+        return True
+
+    for x in settings_file:
+        settings[x] = settings_file[x]
+    print(mime_types)
+    print(settings_file)
+    return True
+
 if __name__ == '__main__':
     # obtiene el numero de procesadores disponibles
     numberProcessors = mp.cpu_count()
-    log_server = open(log_server_file_name, 'a')
+    log_server = open(settings['log_server_file_name'], 'a')
     if numberProcessors < 3:
         numberProcessors = 3
     administrador = mp.Manager()
@@ -240,33 +339,26 @@ if __name__ == '__main__':
     fecha_servidor = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
     log_server.write('/***********************************************/\n')
     log_server.write('Inicio Servidor: ' + fecha_servidor + '\n')
-    log_server.write('escuchando en el puerto: ' + str(port_listening) + '\n')
     log_server.write('El numero de procesadores es: ' + str(numberProcessors) + '\n')
     log_server.flush()
-
-    try:
-        mime_types = json.load(open('mimetypes.json'))
-    except json.JSONDecodeError:
-        log_server.write('ERROR: el archivo mimetypes.json no es valido\n')
+    if not load_settings():
+        log_server.close()
         exit(-1)
-    except OSError:
-        log_server.write('ERROR: el archivo mimetypes.json no existe o no cuenta con permisos de lectura\n')
-        exit(-1)
-    if 'default' not in mime_types or 'content-type' not in mime_types['default']:
-        log_server.write('ERROR: opcion default no se encuentra correctamente configurada en mimetypes.json\n')
-        exit(-1)
-
-    print(mime_types)
-    with ThreadPool(processes=numberProcessors-2) as pool:
+    if settings['ip_listening'] == '':
+        log_server.write('escuchando en todas las direcciones del equipo en el puerto: ' + str(settings['port_listening']) + '\n')
+    else:
+        log_server.write('escuchando en: ' + settings['ip_listening'] + ' en el puerto: ' + str(settings['port_listening']) + '\n')
+    log_server.flush()
+    with ThreadPool(processes=numberProcessors - 2) as pool:
         # put listener to work first
         watcher = pool.apply_async(bitacora, (cola,))
 
         # create an INET, STREAMing socket
         serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # bind the socket to a public host, and a well-known port
-        serversocket.bind(('', port_listening))
+        serversocket.bind((settings['ip_listening'], settings['port_listening']))
         # become a server socket
-        serversocket.listen(numberProcessors-1)
+        serversocket.listen(numberProcessors - 1)
         while True:
             # accept connections from outside
             print('esperando')
