@@ -2,6 +2,7 @@
 .DS_Store
 /captures
 Thumbs.db
+htdocs/*
 
 # Log Files
 *.log
