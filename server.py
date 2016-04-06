@@ -1,12 +1,13 @@
-import re
-from multiprocessing.pool import ThreadPool
-import multiprocessing as mp
-import time
-import socket
 import json
+import multiprocessing as mp
 import os
-from jsonschema import validate, ValidationError
+import re
+import socket
+import time
+from multiprocessing.pool import ThreadPool
+from pprint import pprint
 
+from jsonschema import validate, ValidationError
 
 # opciones configurables del servidor
 settings = dict()
@@ -23,9 +24,14 @@ settings['port_listening'] = 8080
 settings['ip_listening'] = ''
 # indices por default
 settings['default_index'] = ['index.html']
+# soporte CGI
+soporte_cgi = False
 
 # tipos mime
 mime_types = None
+
+# opciones cgi
+opciones_cgi = None
 
 # respustas posibles
 respuesta_http = {'200': 'HTTP/1.1 200 OK\r\n',
@@ -47,21 +53,45 @@ def procesar_cabeceras(diccionario, cadena_texto):
     # divide el encabezado en cadenas de texto correspondiente a cada línea
     dividido = cadena_texto.split('\r\n')
     # la primer línea del encabezado contiene el recurso al cual se accede y la version de http
-    (recurso, version_http) = dividido.pop(0).split(' ')
+    (diccionario['REQUEST_URI'], diccionario['SERVER_PROTOCOL']) = dividido.pop(0).split(' ')
     # separa el recurso solicitado, en el nombre del recurso y los parametros de url (si los tiene)
-    (diccionario['recurso_solicitado'], discard, diccionario['parametros_url']) = recurso.partition('?')
+    (diccionario['recurso_solicitado'], discard, diccionario['QUERY_STRING']) = diccionario['REQUEST_URI'].partition('?')
     # obtiene la extension del archivo que se solicita (obtiene desde el ultimo punto)
-    diccionario['recurso_solicitado_extension'] = diccionario['recurso_solicitado'].rsplit('/', 1)[1]
-    (discard_prove, discard, diccionario['recurso_solicitado_extension']) = diccionario[
-        'recurso_solicitado_extension'].rpartition('.')
+    discard = diccionario['recurso_solicitado'].rsplit('/', 1)
+    diccionario['PATH_INFO'] = discard[0] + '/'
+    (discard_prove, discard, diccionario['recurso_solicitado_extension']) = discard[1].rpartition('.')
     if discard_prove == '':
         diccionario['recurso_solicitado_extension'] = ''
-    diccionario['version_http'] = version_http
     # para todas las otras lineas del encabezado se guarda su parte derecha e izquieda, separadas así por los dos puntos
     for h in dividido:
         x, y = h.split(': ')
         diccionario[x] = y
-    print(repr(diccionario))
+
+
+def procesar_cabeceras_cgi(diccionario):
+    diccionario['SERVER_NAME'] = diccionario['HTTP_HOST'].split(':')[0]
+    if diccionario["REQUEST_METHOD"] == "POST":
+        if 'Content-Type' in diccionario:
+            diccionario["CONTENT_TYPE"] = diccionario['Content-Type']
+        else:
+            diccionario["CONTENT_TYPE"] = ""
+        if 'Content-Length' in diccionario:
+            diccionario['CONTENT_LENGTH'] = diccionario['Content-Length']
+        else:
+            diccionario['CONTENT_LENGTH'] = "0"
+    if 'Accept' in diccionario:
+        diccionario['HTTP_ACCEPT'] = diccionario['Accept']
+    diccionario["SCRIPT_NAME"] = diccionario['recurso_solicitado']
+    # Otras
+    diccionario['GATEWAY_INTERFACE'] = "CGI/1.1"
+    diccionario['PATH_TRANSLATED'] = os.path.realpath(diccionario['PATH_INFO'])
+    diccionario['SERVER_SOFTWARE'] = settings['server_name']
+    # SERVER PROTOCOL VARIABLES
+    diccionario['HTTP_HOST'] = diccionario['Host']
+    # PHP
+    diccionario["REDIRECT_STATUS"] = "200"
+    diccionario["SCRIPT_FILENAME"] = os.path.realpath(diccionario['recurso_solicitado'])
+    pprint(diccionario)
     print('/*******************************************************************/')
 
 
@@ -131,13 +161,15 @@ def process_petition(socket_cliente, log_queue):
     """
     # bandera de error
     error_solicitud = False
+    cabeceras = dict()
     # obtiene los datos del servidor
-    (ip_servidor, puerto_servidor) = socket_cliente.getsockname()
+    (ip_servidor, cabeceras['SERVER_PORT']) = socket_cliente.getsockname()
     # obtiene los datos del cliente
-    (ip_cliente, puerto_cliente) = socket_cliente.getpeername()
+    (cabeceras['REMOTE_ADDR'], puerto_cliente) = socket_cliente.getpeername()
+    print(cabeceras['REMOTE_ADDR'], puerto_cliente, sep=" | ")
     # información a guardar en la bitácora
     texto_bitacora = ''
-    # información que se devolverá al cliente 
+    # información que se devolverá al cliente
     cabeceras_respuesta = ''
     # fecha actual para HTTP
     fecha = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
@@ -152,11 +184,14 @@ def process_petition(socket_cliente, log_queue):
         return
     # verifica que sea de alguno de los métodos aceptados
     elif metodo_http == b'GET ':
+        cabeceras['REQUEST_METHOD'] = "GET"
         texto_bitacora += 'GET, '
     elif metodo_http == b'POST':
+        cabeceras['REQUEST_METHOD'] = "POST"
         texto_bitacora += 'POST, '
         socket_cliente.recv(1)
     elif metodo_http == b'HEAD':
+        cabeceras['REQUEST_METHOD'] = "HEAD"
         texto_bitacora += 'HEAD, '
         socket_cliente.recv(1)
     # en caso de contener informacion que no sea de un método aceptado retorna un error 501
@@ -167,14 +202,13 @@ def process_petition(socket_cliente, log_queue):
     # agrega información básica a la bitácora
     texto_bitacora += tiempo + ', '
     texto_bitacora += ip_servidor + ', '
-    texto_bitacora += ip_cliente + ', '
+    texto_bitacora += cabeceras['REMOTE_ADDR'] + ', '
     cuerpo_respuesta = b''
     solicitud = ''
     # si el método de la solicitud es aceptado
     if not error_solicitud:
         # recibe contendido solicitud
         buffer = socket_cliente.recv(512)
-        cabeceras = dict()
         cuerpo = b''
         while 1:
             # continua recibiendo contenido
@@ -190,11 +224,10 @@ def process_petition(socket_cliente, log_queue):
             buffer = socket_cliente.recv(512)
         # añade a la bitácora el recurso solicitado y los parámetros de url
         texto_bitacora += cabeceras['recurso_solicitado'] + ', '
-        texto_bitacora += cabeceras['parametros_url']
+        texto_bitacora += cabeceras['QUERY_STRING']
 
         # si el método es POST
         if metodo_http == b'POST':
-            # se debe verificar que todo el cuerpo haya sido recibido (según el Content-Length)
             if 'Content-Length' not in cabeceras:
                 # si no está definido el Content-Length se toma como 0
                 cabeceras['Content-Length'] = '0'
@@ -204,7 +237,6 @@ def process_petition(socket_cliente, log_queue):
                 cuerpo += buffer.decode()
             str(cuerpo).replace('\n', '\\n')
             texto_bitacora += ' || POST-> |' + cuerpo
-
         # obtener archivo, y el tipo de contenido
         (archivo, content_type, codificar) = obtener_datos_archivo(
             cabeceras['recurso_solicitado'],
@@ -304,17 +336,22 @@ def bitacora(cola_bitacora):
 
 def load_settings():
     global mime_types
+    global opciones_cgi
+    global soporte_cgi
     schema_settings = {
         "type": "object",
         "properties": {
             "server_name": {
-                "type": "string"
+                "type": "string",
+                "minLength": 1
             },
             "log_requests_file_name": {
-                "type": "string"
+                "type": "string",
+                "minLength": 1
             },
             "log_server_file_name": {
-                "type": "string"
+                "type": "string",
+                "minLength": 1
             },
             "htdocs_folder": {
                 "type": "string"
@@ -329,9 +366,14 @@ def load_settings():
             "default_index": {
                 "type": "array",
                 "items": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                 }
 
+            },
+            "cgi_file": {
+                "type": "string",
+                "minLength": 1
             }
         },
         "additionalProperties": False
@@ -346,7 +388,8 @@ def load_settings():
                         "type": "boolean"
                     },
                     "content-type": {
-                        "type": "string"
+                        "type": "string",
+                        "minLength": 1
                     }
                 },
                 "required": [
@@ -358,6 +401,16 @@ def load_settings():
         "required": [
             "default"
         ]
+    }
+    schema_cgi_types = {
+        "type": "object",
+        "patternProperties": {
+            "([A-z]|[0-9]|-|_)+$": {
+                "type": "string",
+                "minLength": 1
+            }
+        },
+        "additionalProperties": False
     }
     try:
         mime_types = json.load(open('mimetypes.json'))
@@ -396,8 +449,33 @@ def load_settings():
 
     for x in settings_file:
         settings[x] = settings_file[x]
+
+    if 'cgi_file' in settings:
+        soporte_cgi = True
+        try:
+            opciones_cgi = json.load(open(settings['cgi_file']))
+        except json.JSONDecodeError:
+            log_server.write('ERROR: el archivo '+settings['cgi_file']+' no es valido\n')
+            log_server.write('No se utilizará CGI\n')
+            soporte_cgi = False
+        except OSError:
+            log_server.write('ERROR: el archivo '+settings['cgi_file']+' no existe o no cuenta con permisos de lectura')
+            log_server.write('\nNo se utilizará CGI\n')
+            soporte_cgi = False
+        if soporte_cgi:
+            try:
+                validate(opciones_cgi, schema_cgi_types)
+            except ValidationError as e:
+                log_server.write('ERROR: problema con el archivo '+settings['cgi_file']+'\n')
+                log_server.write('<-------------------\_/------------------->\n\n')
+                log_server.write(repr(e))
+                log_server.write('\n<-------------------/^\------------------->\n')
+                log_server.write('No se utilizará CGI\n')
+                soporte_cgi = False
     print(mime_types)
     print(settings_file)
+    print(soporte_cgi)
+    print(opciones_cgi)
     return True
 
 if __name__ == '__main__':
@@ -419,14 +497,14 @@ if __name__ == '__main__':
     if settings['ip_listening'] == '':
         log_server.write(
             'escuchando en todas las direcciones del equipo en el puerto: ' + str(settings['port_listening']) + '\n'
-                        )
+        )
     else:
         log_server.write(
-                            'escuchando en: ' +
-                            settings['ip_listening'] +
-                            ' en el puerto: ' +
-                            str(settings['port_listening']) + '\n'
-                        )
+            'escuchando en: ' +
+            settings['ip_listening'] +
+            ' en el puerto: ' +
+            str(settings['port_listening']) + '\n'
+        )
     log_server.flush()
     with ThreadPool(processes=numberProcessors - 2) as pool:
         # put listener to work first
