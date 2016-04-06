@@ -6,7 +6,7 @@ import socket
 import time
 from multiprocessing.pool import ThreadPool
 from pprint import pprint
-
+import subprocess
 from jsonschema import validate, ValidationError
 
 # opciones configurables del servidor
@@ -50,6 +50,7 @@ def procesar_cabeceras(diccionario, cadena_texto):
     :return: no devuelve nada
     """
     print('/*******************************************************************/')
+    print(cadena_texto)
     # divide el encabezado en cadenas de texto correspondiente a cada línea
     dividido = cadena_texto.split('\r\n')
     # la primer línea del encabezado contiene el recurso al cual se accede y la version de http
@@ -66,11 +67,13 @@ def procesar_cabeceras(diccionario, cadena_texto):
     for h in dividido:
         x, y = h.split(': ')
         diccionario[x] = y
+    print(diccionario)
+    print('/*******************************************************************/')
 
 
 def procesar_cabeceras_cgi(diccionario):
-    diccionario['SERVER_NAME'] = diccionario['HTTP_HOST'].split(':')[0]
     if diccionario["REQUEST_METHOD"] == "POST":
+        print("NOSE")
         if 'Content-Type' in diccionario:
             diccionario["CONTENT_TYPE"] = diccionario['Content-Type']
         else:
@@ -88,17 +91,19 @@ def procesar_cabeceras_cgi(diccionario):
     diccionario['SERVER_SOFTWARE'] = settings['server_name']
     # SERVER PROTOCOL VARIABLES
     diccionario['HTTP_HOST'] = diccionario['Host']
+    diccionario['SERVER_NAME'] = diccionario['HTTP_HOST'].split(':')[0]
     # PHP
     diccionario["REDIRECT_STATUS"] = "200"
-    diccionario["SCRIPT_FILENAME"] = os.path.realpath(diccionario['recurso_solicitado'])
+    diccionario["SCRIPT_FILENAME"] = os.path.realpath(settings['htdocs_folder']+diccionario['recurso_solicitado'])
     pprint(diccionario)
     print('/*******************************************************************/')
 
 
-def obtener_datos_archivo(filename, extension):
+def obtener_datos_archivo(filename, extension, headers):
     """
     :param filename: nombre del archivo
     :param extension: extension del archivo
+    :param headers: todos los encabezados
 
     :return:    > archivo:      :-  File:   en caso de encontrarse el archivo
                                 :-  None:   en caso de no existir el el archivo
@@ -109,45 +114,58 @@ def obtener_datos_archivo(filename, extension):
                 > read_as_text  :- Boolean: indica si el archivo fue o no leido como texto
     """
     print('/*******************************************************************/')
-    # concatena al nombre del archivo la ruta de donde se toman lops archvos
+    # concatena al nombre del archivo la ruta de donde se toman los archvos
     filename = settings['htdocs_folder'] + filename
     print('param: filename=' + filename + ' extension=' + extension)
-    # verifica si se solicita un archivo o una carpeta verficando su ultimo caracter
-    if filename == '' or filename[-1] == '/':
-        # en caso de ser una carpeta verfica si existe algún archivo de índice
-        for filename_index in settings['default_index']:
-            print(filename + filename_index)
-            # verifica el primero de los archivos que exista
-            if os.path.isfile(filename + filename_index):
-                filename += filename_index
-                (discard, discard, extension) = filename_index.rpartition('.')
-                break
-    # verifica si la extension está registrada en la lista de MIME-TYPES
-    if extension not in mime_types:
-        # en caso de no estarlo lo toma como si fuera del tipo default
-        extension = 'default'
-    # por defecto se lee como un archivo de texto
-    type_file_read = 'r'
-    # verifica si está indicado que se lea como un archivo binario
-    if 'binary' in mime_types[extension] and mime_types[extension]['binary'] == True:
-        type_file_read = 'rb'
-    mime_type_file = ''
-    print('filename: ' + filename + ' | htdocs_folder: ' + settings['htdocs_folder'])
+    mime_type_file = ""
+    type_file_read = "r"
+    archivo = -1
     # verifica que la solicitud no sea de un folder superior al de htdocs (seguridad)
     if '..' not in os.path.relpath(filename, settings['htdocs_folder']):
-        try:
-            print("voy a ver")
-            print("type_file_read->", type_file_read)
-            print("filename", filename)
-            # abre el archivo
-            archivo = open(filename, type_file_read)
-            # obtiene el content type correspondiente
-            mime_type_file = mime_types[extension]['content-type']
-        except OSError:
-            archivo = None
-    else:
-        archivo = -1
-    print(repr(archivo), mime_types[extension]['content-type'], sep='   |||  ')
+        # verifica si se solicita un archivo o una carpeta verficando su ultimo caracter
+        if filename == '' or filename[-1] == '/':
+            # en caso de ser una carpeta verfica si existe algún archivo de índice
+            for filename_index in settings['default_index']:
+                print(filename + filename_index)
+                # verifica el primero de los archivos que exista
+                if os.path.isfile(filename + filename_index):
+                    filename += filename_index
+                    (discard, discard, extension) = filename_index.rpartition('.')
+                    break
+        if soporte_cgi and extension in opciones_cgi:
+            # todo: implementar cgi
+            print("TOCO CGI")
+            procesar_cabeceras_cgi(headers)
+            print(headers)
+            p = subprocess.Popen(opciones_cgi[extension], env=headers, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            print(p)
+            respuesta = p.communicate(input=b'nombre=ERICKMR19')[0]
+            print(respuesta)
+            header, cuerpo = respuesta.split(b'\r\n\r\n', 1)
+            return cuerpo, "text/html", -1
+        else:
+            # verifica si la extension está registrada en la lista de MIME-TYPES
+            if extension not in mime_types:
+                # en caso de no estarlo lo toma como si fuera del tipo default
+                extension = 'default'
+            # por defecto se lee como un archivo de texto
+            type_file_read = 'r'
+            # verifica si está indicado que se lea como un archivo binario
+            if 'binary' in mime_types[extension] and mime_types[extension]['binary'] == True:
+                type_file_read = 'rb'
+            mime_type_file = ''
+            print('filename: ' + filename + ' | htdocs_folder: ' + settings['htdocs_folder'])
+            try:
+                print("voy a ver")
+                print("type_file_read->", type_file_read)
+                print("filename", filename)
+                # abre el archivo
+                archivo = open(filename, type_file_read)
+                # obtiene el content type correspondiente
+                mime_type_file = mime_types[extension]['content-type']
+            except OSError:
+                archivo = None
+    # print(repr(archivo), mime_types[extension]['content-type'], sep='   |||  ')
     print('/*******************************************************************/')
     return archivo, mime_type_file, type_file_read == 'r'
 
@@ -164,6 +182,7 @@ def process_petition(socket_cliente, log_queue):
     cabeceras = dict()
     # obtiene los datos del servidor
     (ip_servidor, cabeceras['SERVER_PORT']) = socket_cliente.getsockname()
+    cabeceras['SERVER_PORT'] = str(cabeceras['SERVER_PORT'])
     # obtiene los datos del cliente
     (cabeceras['REMOTE_ADDR'], puerto_cliente) = socket_cliente.getpeername()
     print(cabeceras['REMOTE_ADDR'], puerto_cliente, sep=" | ")
@@ -240,7 +259,8 @@ def process_petition(socket_cliente, log_queue):
         # obtener archivo, y el tipo de contenido
         (archivo, content_type, codificar) = obtener_datos_archivo(
             cabeceras['recurso_solicitado'],
-            cabeceras['recurso_solicitado_extension']
+            cabeceras['recurso_solicitado_extension'],
+            cabeceras
         )
 
         # verificar tipo compatible
@@ -262,7 +282,7 @@ def process_petition(socket_cliente, log_queue):
                 # verifica si el MIME type del archivo es compatible con lo indicado en Accept
                 for x in patrones:
                     print("X: " + repr(x) + " CT->" + repr(content_type))
-                    if re.fullmatch(x, content_type):
+                    if re.match(x, content_type):
                         tipo_aceptado = True
                         break
 
@@ -270,6 +290,14 @@ def process_petition(socket_cliente, log_queue):
         if archivo == -1:
             # error Forbidden
             cabeceras_respuesta = respuesta_http['403']
+        # el archivo fue procesado por CGI
+        elif codificar == -1:
+            if tipo_aceptado:
+                cuerpo_respuesta = archivo
+                cabeceras_respuesta = respuesta_http['200']
+            else:
+                # si no es aceptado se retorna un error 406
+                cabeceras_respuesta = respuesta_http['406']
         # el archivo pudo abrirse correctamente
         elif archivo:
             # pregunta si el archivo es aceptado
