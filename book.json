@@ -2,6 +2,6 @@
   "gitbook": "2.x.x",
   "language": "es",
   "structure": {
-        "readme": "Intro.md"
+        "readme": "INTRO.md"
     }
 }
