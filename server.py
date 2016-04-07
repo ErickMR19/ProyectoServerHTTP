@@ -116,6 +116,7 @@ def obtener_datos_archivo(filename, extension, headers):
     print('/*******************************************************************/')
     # concatena al nombre del archivo la ruta de donde se toman los archvos
     filename = settings['htdocs_folder'] + filename
+
     print('param: filename=' + filename + ' extension=' + extension)
     mime_type_file = ""
     type_file_read = "r"
@@ -123,26 +124,41 @@ def obtener_datos_archivo(filename, extension, headers):
     # verifica que la solicitud no sea de un folder superior al de htdocs (seguridad)
     if '..' not in os.path.relpath(filename, settings['htdocs_folder']):
         # verifica si se solicita un archivo o una carpeta verficando su ultimo caracter
-        if filename == '' or filename[-1] == '/':
+        if os.path.isdir(filename):
+            if filename[-1] != '/':
+                filename += '/'
+                headers['recurso_solicitado'] += '/'
             # en caso de ser una carpeta verfica si existe algún archivo de índice
             for filename_index in settings['default_index']:
                 print(filename + filename_index)
                 # verifica el primero de los archivos que exista
                 if os.path.isfile(filename + filename_index):
                     filename += filename_index
+                    headers['recurso_solicitado'] += filename_index
                     (discard, discard, extension) = filename_index.rpartition('.')
                     break
         if soporte_cgi and extension in opciones_cgi:
-            # todo: implementar cgi
-            print("TOCO CGI")
             procesar_cabeceras_cgi(headers)
-            print(headers)
             p = subprocess.Popen(opciones_cgi[extension], env=headers, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            print(p)
             respuesta = p.communicate(input=b'nombre=ERICKMR19')[0]
-            print(respuesta)
             header, cuerpo = respuesta.split(b'\r\n\r\n', 1)
-            return cuerpo, "text/html", -1
+            header = header.decode()
+            if 'Status' in header:
+                header = header.replace('Status:', 'HTTP/1.1', 1)
+            else:
+                header = respuesta_http["200"]+header
+            content_type = re.search('Content-Type: (.*)(,|$)', header)
+            print(content_type)
+            if content_type:
+                print("/*asdasd*/")
+                content_type = content_type.group(1)
+            else:
+                content_type = "text/plain"
+            print(header)
+            print("/**/")
+            print(cuerpo)
+            print(content_type)
+            return [header, cuerpo], content_type, -1
         else:
             # verifica si la extension está registrada en la lista de MIME-TYPES
             if extension not in mime_types:
@@ -292,9 +308,10 @@ def process_petition(socket_cliente, log_queue):
             cabeceras_respuesta = respuesta_http['403']
         # el archivo fue procesado por CGI
         elif codificar == -1:
+            print(archivo)
             if tipo_aceptado:
-                cuerpo_respuesta = archivo
-                cabeceras_respuesta = respuesta_http['200']
+                cuerpo_respuesta = archivo[1]
+                cabeceras_respuesta = archivo[0] + '\r\n'
             else:
                 # si no es aceptado se retorna un error 406
                 cabeceras_respuesta = respuesta_http['406']
@@ -324,7 +341,7 @@ def process_petition(socket_cliente, log_queue):
             cabeceras_respuesta = respuesta_http['404']
 
         # Se agrega la cabecera de content_type
-        if content_type != '':
+        if codificar != -1 and content_type != '':
             cabeceras_respuesta += 'Content-Type: ' + content_type + '\r\n'
     # en caso de ser erróneo
     else:
