@@ -4,6 +4,8 @@
 Thumbs.db
 htdocs/*
 
+jsonschema/__pycache__/*
+
 # Log Files
 *.log
 
