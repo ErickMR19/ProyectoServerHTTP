@@ -13,3 +13,5 @@
   * [Opciones de configuración](docs/uso/Configuracion.md)
   * [Mime-Types](docs/uso/MimeTypes.md)
   * [Configuración de CGI](docs/uso/Cgi.md)
+
+* [Glosario](GLOSSARY.md)
