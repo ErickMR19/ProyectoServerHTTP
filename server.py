@@ -99,20 +99,24 @@ def procesar_cabeceras_cgi(diccionario):
     print('/*******************************************************************/')
 
 
-def obtener_datos_archivo(filename, extension, headers):
+def obtener_datos_archivo(headers, cuepo_post):
     """
     :param filename: nombre del archivo
     :param extension: extension del archivo
     :param headers: todos los encabezados
 
-    :return:    > archivo:      :-  File:   en caso de encontrarse el archivo
-                                :-  None:   en caso de no existir el el archivo
-                                :-  -1      en caso de que se trate de obtener un archivo de un folder superior
+    :return:    > archivo:      :-  File:   			en caso de encontrarse el archivo
+                                :-  None:   			en caso de no existir el el archivo
+								:-	(header,cuerpo):	en caso de ser un archivo procesado por CGI
+                                :-  -1:      			en caso de que se trate de obtener un archivo de un folder superior (prohibido)
 
                 > mime_type     :- String:  contiene el mime type
 
                 > read_as_text  :- Boolean: indica si el archivo fue o no leido como texto
+								:- -1:		indica que el archivo fue procesado por CGI
     """
+    filename = headers['recurso_solicitado']
+    extension = headers['recurso_solicitado_extension']
     print('/*******************************************************************/')
     # concatena al nombre del archivo la ruta de donde se toman los archvos
     filename = settings['htdocs_folder'] + filename
@@ -140,20 +144,22 @@ def obtener_datos_archivo(filename, extension, headers):
         if soporte_cgi and extension in opciones_cgi:
             procesar_cabeceras_cgi(headers)
             p = subprocess.Popen(opciones_cgi[extension], env=headers, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            respuesta = p.communicate(input=b'nombre=ERICKMR19')[0]
+            respuesta = p.communicate(input=cuepo_post)[0]
             header, cuerpo = respuesta.split(b'\r\n\r\n', 1)
             header = header.decode()
-            if 'Status' in header:
-                header = header.replace('Status:', 'HTTP/1.1', 1)
-            else:
-                header = respuesta_http["200"]+header
             content_type = re.search('Content-Type: (.*)(,|$)', header)
             print(content_type)
             if content_type:
-                print("/*asdasd*/")
                 content_type = content_type.group(1)
             else:
                 content_type = "text/plain"
+            if 'Status' in header:
+                content_type = ""
+                header = header.replace('Status:', 'HTTP/1.1', 1)
+                if '404' in header:
+                    cuerpo = b''
+            else:
+                header = respuesta_http["200"]+header
             print(header)
             print("/**/")
             print(cuerpo)
@@ -263,20 +269,22 @@ def process_petition(socket_cliente, log_queue):
 
         # si el método es POST
         if metodo_http == b'POST':
+            print("HEEEEEEEEEEEEEEEEEEEY")
+            cuerpo = cuerpo.encode()
+            print(cuerpo)
+            print(len(cuerpo))
             if 'Content-Length' not in cabeceras:
                 # si no está definido el Content-Length se toma como 0
                 cabeceras['Content-Length'] = '0'
             # se continua recibiendo hasta alcanzar el Content-Length
+            print("HEEEEEEEEEEEEEEEEEEEY2")
             while str(len(cuerpo)) != cabeceras['Content-Length']:
                 buffer = socket_cliente.recv(512)
-                cuerpo += buffer.decode()
-            str(cuerpo).replace('\n', '\\n')
-            texto_bitacora += ' || POST-> |' + cuerpo
+                cuerpo += buffer
+            texto_bitacora += ' || POST-> |' + cuerpo.decode()
         # obtener archivo, y el tipo de contenido
         (archivo, content_type, codificar) = obtener_datos_archivo(
-            cabeceras['recurso_solicitado'],
-            cabeceras['recurso_solicitado_extension'],
-            cabeceras
+            cabeceras, cuerpo
         )
 
         # verificar tipo compatible
