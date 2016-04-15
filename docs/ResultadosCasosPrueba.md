@@ -1,7 +1,8 @@
 
 # Resultados de los casos de prueba
 
-1. <pre>HTTP/1.1 200 OK
+1) 
+<pre>HTTP/1.1 200 OK
 Content-Type: text/html; charset=utf-8
 Date: Fri, 15 Apr 2016 10:05:09 GMT
 Server: ErickMRServer/0.5
@@ -21,14 +22,15 @@ Content-Length: 201
 </pre>
 
 
-2. ```HTTP/1.1 406 Not Acceptable
+2) 
+<pre>HTTP/1.1 406 Not Acceptable
 Content-Type: text/html; charset=utf-8
 Date: Fri, 15 Apr 2016 10:06:37 GMT
 Server: ErickMRServer/0.5
 Content-Length: 0
-
-
-```
+&nbsp;
+&nbsp;
+</pre>
 
 3. ```Warning: Setting custom HTTP method to HEAD may not work the way you want.
 HTTP/1.1 200 OK
