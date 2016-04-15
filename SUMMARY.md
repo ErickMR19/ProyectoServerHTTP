@@ -1,4 +1,4 @@
-# Tabla de Contenido
+# Summary
 
 * [Introducción](INTRO.md)
 * [Manual de diseño](docs/manual_diseno.md)
@@ -10,7 +10,9 @@
 * [Manual de uso](docs/uso/manual_uso.md)
    * [Requerimientos](docs/uso/Requerimientos.md)
    * [Ejecución del servidor](docs/uso/Ejecucion.md)
-   * [Opciones de configuración](docs/uso/Configuracion.md)
    * [Mime-Types](docs/uso/MimeTypes.md)
+   * [Opciones de configuración](docs/uso/Configuracion.md)
    * [Configuración de CGI](docs/uso/Cgi.md)
+   * [Bitácoras](docs/uso/bitacoras.md)
+   * [Consideraciones al escribir rutas](docs/uso/ConsideracionesRutas.md)
 
