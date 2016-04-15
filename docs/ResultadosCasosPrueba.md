@@ -21,6 +21,8 @@ Content-Length: 201
     </body>
 </html>
 ```
+```GET, #, 127.0.0.1, 127.0.0.1, , /, ```
+
 2-)
 ```
 HTTP/1.1 406 Not Acceptable
@@ -29,6 +31,8 @@ Date: Fri, 15 Apr 2016 10:06:37 GMT
 Server: ErickMRServer/0.5
 Content-Length: 0
 ```
+```GET, #, 127.0.0.1, 127.0.0.1, , /form.html, ```
+
 3-) 
 
 ```
@@ -41,14 +45,17 @@ Content-Length: 201
 
 curl: (18) transfer closed with 201 bytes remaining to read
 ```
+```HEAD, #, 127.0.0.1, 127.0.0.1, , /index.html,```
+
 4-) 
 ```
 HTTP/1.1 404 Not Found
 Date: Fri, 15 Apr 2016 10:08:15 GMT
 Server: ErickMRServer/0.5
 Content-Length: 0
-
 ```
+```GET, #, 127.0.0.1, 127.0.0.1, , /archivonoexistente.html, ```
+
 5-)
 ```
 HTTP/1.1 200 OK
@@ -68,6 +75,8 @@ Content-Length: 201
     </body>
 </html>
 ```
+```POST, #, 127.0.0.1, 127.0.0.1, , /index.html,  || POST-> |mensaje=Hola+Mundo```
+
 6-) 
 ```
 HTTP/1.1 200 OK
@@ -86,4 +95,6 @@ Content-Length: 201
         <img alt="LOGO" src="img/logo.png" />
     </body>
 </html>
+```
+```GET, #, 127.0.0.1, 127.0.0.1, , /index.html, name=Erick
 ```
