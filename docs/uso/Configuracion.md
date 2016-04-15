@@ -12,6 +12,10 @@ A el servidor se le pueden proveer algunas opciones configurables en una archivo
   <tr>
     <td>log_server_file_name</td><td>Nombre del archivo de bitácora para los eventos</td><td>String</td><tr>
   </tr>
+  <tr>
+    <td>htdocs_folder</td><td>Ruta de donde se tomarán los archivos que se soliciten al servidor</td><td>String</td>
+  </tr>
+  <tr>
     <td>port_listening</td><td>Puerto en el cual se escucharan los solicitudes</td><td>String</td><tr>
   <tr>
     <td>ip_listening</td><td>Dirección en la cual se escucharán las solicitudes (cadena vacía [""] indica que se escuche en todas las direcciones asignadas al equipo)</td><td>String</td><tr>
