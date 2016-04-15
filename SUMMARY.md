@@ -1,4 +1,4 @@
-# Tabla de contenido
+# Tabla de Contenido
 
 * [Introducción](INTRO.md)
 * [Manual de diseño](docs/manual_diseno.md)
