@@ -22,3 +22,5 @@ A el servidor se le pueden proveer algunas opciones configurables en una archivo
     <td>cgi_file</td><td>Indica el nombre del archivo donde está la configuración de <a href="Cgi.md">CGI</a></td><td>String</td>
   </tr>
 </table>
+
+En caso de no encontrarse este archivo, o alguno de estos valores, el servidor utilizará las opciones de configuración por defecto, definidas en el script*server.py*.
