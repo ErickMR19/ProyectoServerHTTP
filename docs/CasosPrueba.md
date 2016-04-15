@@ -1,7 +1,8 @@
 
 # Casos de prueba
 
-Se realizan distintas pruebas. Las primeras utilizando una aplicación CLI la cual es un cliente que genera peticiones HTTP, llamada cURL. Estas se encargan de comprobar algún funcionamiento específico y de forzar ciertos errores.
+Se realizan distintas pruebas. Las primeras utilizando una aplicación CLI la cual es un cliente que genera peticiones HTTP, llamada cURL. Estas se encargan de comprobar algún funcionamiento específico y de forzar ciertos errores. 
+Por la configuración del servidor en todos los casos, está escuchando en el puerto 8080 en la dirección 127.0.0.1.
 
 1. curl -i http://127.0.0.1:8080/
 
