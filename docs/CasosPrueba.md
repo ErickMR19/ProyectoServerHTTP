@@ -22,4 +22,4 @@ Se realizan otras pruebas más funcionales, donde se evalúa su experiencia desd
 
 8-) Visitar ```http://127.0.0.1:8080/info.php```
 
-9-) Visitar ```http://127.0.0.1:8080/form.html```
+9-) Visitar ```http://127.0.0.1:8080/form.html``` y enviar el formulario con ambos métodos.

@@ -98,3 +98,21 @@ Content-Length: 201
 ```
 ```GET, #, 127.0.0.1, 127.0.0.1, , /index.html, name=Erick
 ```
+
+7-)
+
+![CasoPrueba7](capturas/captura7.png)
+
+8-)
+
+![CasoPrueba8](capturas/captura8.png)
+
+9-)
+
+![CasoPrueba9-get-form](capturas/captura9-get-form.png)
+
+![CasoPrueba9-get-vars](capturas/captura9-get-vars.png)
+
+![CasoPrueba9-post-form](capturas/captura9-post-form.png)
+
+![CasoPrueba9-post-vars](capturas/captura9-post-vars.png)
