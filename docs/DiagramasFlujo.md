@@ -2,7 +2,7 @@
 # Diagrama de flujo
 
 
-![InicioServidor](DiagramaServidorInicio.svg)
+![InicioServidor](DiagramaServidorInicio.png)
 
 ![RecibirSolicitud](DiagramaServidorInicioSolicitud.svg)
 
