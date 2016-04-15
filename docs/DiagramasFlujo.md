@@ -4,6 +4,6 @@
 
 ![InicioServidor](DiagramaServidorInicio.png)
 
-![RecibirSolicitud](DiagramaServidorInicioSolicitud.svg)
+![RecibirSolicitud](DiagramaServidorInicioSolicitud.png)
 
-![RetornarSolicitud](DiagramaServidorFinSolicitud.svg)
+![RetornarSolicitud](DiagramaServidorFinSolicitud.png)
