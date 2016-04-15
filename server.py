@@ -49,8 +49,6 @@ def procesar_cabeceras(diccionario, cadena_texto):
     :param cadena_texto: cadena que contiene los datos de la cabecera
     :return: no devuelve nada
     """
-    print('/*******************************************************************/')
-    print(cadena_texto)
     # divide el encabezado en cadenas de texto correspondiente a cada línea
     dividido = cadena_texto.split('\r\n')
     # la primer línea del encabezado contiene el recurso al cual se accede y la version de http
@@ -67,13 +65,10 @@ def procesar_cabeceras(diccionario, cadena_texto):
     for h in dividido:
         x, y = h.split(': ')
         diccionario[x] = y
-    print(diccionario)
-    print('/*******************************************************************/')
 
 
 def procesar_cabeceras_cgi(diccionario):
     if diccionario["REQUEST_METHOD"] == "POST":
-        print("NOSE")
         if 'Content-Type' in diccionario:
             diccionario["CONTENT_TYPE"] = diccionario['Content-Type']
         else:
@@ -95,8 +90,6 @@ def procesar_cabeceras_cgi(diccionario):
     # PHP
     diccionario["REDIRECT_STATUS"] = "200"
     diccionario["SCRIPT_FILENAME"] = os.path.realpath(settings['htdocs_folder']+diccionario['recurso_solicitado'])
-    pprint(diccionario)
-    print('/*******************************************************************/')
 
 
 def obtener_datos_archivo(headers, cuepo_post):
@@ -117,11 +110,9 @@ def obtener_datos_archivo(headers, cuepo_post):
     """
     filename = headers['recurso_solicitado']
     extension = headers['recurso_solicitado_extension']
-    print('/*******************************************************************/')
     # concatena al nombre del archivo la ruta de donde se toman los archvos
     filename = settings['htdocs_folder'] + filename
 
-    print('param: filename=' + filename + ' extension=' + extension)
     mime_type_file = ""
     type_file_read = "r"
     archivo = -1
@@ -134,7 +125,6 @@ def obtener_datos_archivo(headers, cuepo_post):
                 headers['recurso_solicitado'] += '/'
             # en caso de ser una carpeta verfica si existe algún archivo de índice
             for filename_index in settings['default_index']:
-                print(filename + filename_index)
                 # verifica el primero de los archivos que exista
                 if os.path.isfile(filename + filename_index):
                     filename += filename_index
@@ -148,7 +138,6 @@ def obtener_datos_archivo(headers, cuepo_post):
             header, cuerpo = respuesta.split(b'\r\n\r\n', 1)
             header = header.decode()
             content_type = re.search('Content-Type: (.*)(,|$)', header)
-            print(content_type)
             if content_type:
                 content_type = content_type.group(1)
             else:
@@ -160,10 +149,6 @@ def obtener_datos_archivo(headers, cuepo_post):
                     cuerpo = b''
             else:
                 header = respuesta_http["200"]+header
-            print(header)
-            print("/**/")
-            print(cuerpo)
-            print(content_type)
             return [header, cuerpo], content_type, -1
         else:
             # verifica si la extension está registrada en la lista de MIME-TYPES
@@ -176,19 +161,13 @@ def obtener_datos_archivo(headers, cuepo_post):
             if 'binary' in mime_types[extension] and mime_types[extension]['binary'] == True:
                 type_file_read = 'rb'
             mime_type_file = ''
-            print('filename: ' + filename + ' | htdocs_folder: ' + settings['htdocs_folder'])
             try:
-                print("voy a ver")
-                print("type_file_read->", type_file_read)
-                print("filename", filename)
                 # abre el archivo
                 archivo = open(filename, type_file_read)
                 # obtiene el content type correspondiente
                 mime_type_file = mime_types[extension]['content-type']
             except OSError:
                 archivo = None
-    # print(repr(archivo), mime_types[extension]['content-type'], sep='   |||  ')
-    print('/*******************************************************************/')
     return archivo, mime_type_file, type_file_read == 'r'
 
 
@@ -207,7 +186,6 @@ def process_petition(socket_cliente, log_queue):
     cabeceras['SERVER_PORT'] = str(cabeceras['SERVER_PORT'])
     # obtiene los datos del cliente
     (cabeceras['REMOTE_ADDR'], puerto_cliente) = socket_cliente.getpeername()
-    print(cabeceras['REMOTE_ADDR'], puerto_cliente, sep=" | ")
     # información a guardar en la bitácora
     texto_bitacora = ''
     # información que se devolverá al cliente
@@ -264,20 +242,20 @@ def process_petition(socket_cliente, log_queue):
                 break
             buffer = socket_cliente.recv(512)
         # añade a la bitácora el recurso solicitado y los parámetros de url
+        if 'Referer' in cabeceras:
+            texto_bitacora += cabeceras['Referer'] + ', '
+        else:
+            texto_bitacora += ', '
         texto_bitacora += cabeceras['recurso_solicitado'] + ', '
         texto_bitacora += cabeceras['QUERY_STRING']
 
         # si el método es POST
         if metodo_http == b'POST':
-            print("HEEEEEEEEEEEEEEEEEEEY")
             cuerpo = cuerpo.encode()
-            print(cuerpo)
-            print(len(cuerpo))
             if 'Content-Length' not in cabeceras:
                 # si no está definido el Content-Length se toma como 0
                 cabeceras['Content-Length'] = '0'
             # se continua recibiendo hasta alcanzar el Content-Length
-            print("HEEEEEEEEEEEEEEEEEEEY2")
             while str(len(cuerpo)) != cabeceras['Content-Length']:
                 buffer = socket_cliente.recv(512)
                 cuerpo += buffer
@@ -296,16 +274,12 @@ def process_petition(socket_cliente, log_queue):
             # si la cadena */* se encuentra en el valor de Accept, no es necesario verificar
             if cabeceras['Accept'].find('*/*') == -1:
                 tipo_aceptado = False
-                print('cabecera accept | ' + cabeceras['Accept'])
                 # separa los tipos aceptados por ; además el parametro q no se toma en cuenta
                 separadas = re.sub(';q.+?(,|$)', ',', cabeceras['Accept'])
-                print('separadas | ' + separadas)
                 # convierte los * en .+ por asuntos de expresiones regulares
                 patrones = re.sub('/\*', '/.+', separadas).rstrip(',').split(',')
-                print('patrones | ' + repr(patrones))
                 # verifica si el MIME type del archivo es compatible con lo indicado en Accept
                 for x in patrones:
-                    print("X: " + repr(x) + " CT->" + repr(content_type))
                     if re.match(x, content_type):
                         tipo_aceptado = True
                         break
@@ -316,7 +290,6 @@ def process_petition(socket_cliente, log_queue):
             cabeceras_respuesta = respuesta_http['403']
         # el archivo fue procesado por CGI
         elif codificar == -1:
-            print(archivo)
             if tipo_aceptado:
                 cuerpo_respuesta = archivo[1]
                 cabeceras_respuesta = archivo[0] + '\r\n'
@@ -373,6 +346,7 @@ def process_petition(socket_cliente, log_queue):
     socket_cliente.close()
 
 
+# ** ver referencia 1 **
 def bitacora(cola_bitacora):
     """Lee los mensajes en la cola y lo escribe en el archivo de bitácora
     :param cola_bitacora: cola de donde se leeran los archivos
@@ -391,6 +365,7 @@ def load_settings():
     global mime_types
     global opciones_cgi
     global soporte_cgi
+    # esquema para verificar el archivo de configuración
     schema_settings = {
         "type": "object",
         "properties": {
@@ -431,6 +406,7 @@ def load_settings():
         },
         "additionalProperties": False
     }
+    # esquema para verificar el archivo de mime-types
     schema_mime_types = {
         "type": "object",
         "patternProperties": {
@@ -455,6 +431,7 @@ def load_settings():
             "default"
         ]
     }
+    # esquema para verificar el archivo de mime-types
     schema_cgi_types = {
         "type": "object",
         "patternProperties": {
@@ -465,6 +442,7 @@ def load_settings():
         },
         "additionalProperties": False
     }
+    # verifica el archivo de mime-types (es requerido, si no está o no es válido, el servidor no funciona)
     try:
         mime_types = json.load(open('mimetypes.json'))
     except json.JSONDecodeError:
@@ -480,7 +458,7 @@ def load_settings():
         log_server.write(repr(e))
         log_server.write('\n<-------------------/^\------------------->\n')
         return False
-
+    # verifica el archivo de settings (si no está o no es válido, utiliza la configuración por defecto)
     try:
         settings_file = json.load(open('settings.json'))
     except json.JSONDecodeError:
@@ -504,6 +482,7 @@ def load_settings():
         settings[x] = settings_file[x]
 
     if 'cgi_file' in settings:
+        # verifica el archivo de cgi (si no está o no es válido, no soporta archivos de cgi)
         soporte_cgi = True
         try:
             opciones_cgi = json.load(open(settings['cgi_file']))
@@ -525,16 +504,13 @@ def load_settings():
                 log_server.write('\n<-------------------/^\------------------->\n')
                 log_server.write('No se utilizará CGI\n')
                 soporte_cgi = False
-    print(mime_types)
-    print(settings_file)
-    print(soporte_cgi)
-    print(opciones_cgi)
     return True
 
 if __name__ == '__main__':
     # obtiene el numero de procesadores disponibles
     numberProcessors = mp.cpu_count()
     log_server = open(settings['log_server_file_name'], 'a')
+    # el número minimo de hilos será de tres
     if numberProcessors < 3:
         numberProcessors = 3
     administrador = mp.Manager()
@@ -559,25 +535,31 @@ if __name__ == '__main__':
             str(settings['port_listening']) + '\n'
         )
     log_server.flush()
-    with ThreadPool(processes=numberProcessors - 2) as pool:
-        # put listener to work first
+    with ThreadPool(processes=numberProcessors - 1) as pool:
+        # Ver Referencia 1
+        # asigna a un hilo para que esciba en la bitácora
         watcher = pool.apply_async(bitacora, (cola,))
 
-        # create an INET, STREAMing socket
+        # Ver Referencia 2
+        # inicializa el socket del servidor
         serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # bind the socket to a public host, and a well-known port
+        # asigna el socket a una dirección y un puerto dado
         serversocket.bind((settings['ip_listening'], settings['port_listening']))
-        # become a server socket
+        # comienza a escuchar en el puerto
         serversocket.listen(numberProcessors - 1)
         while True:
-            # accept connections from outside
-            print('esperando')
+            # aceptar conexiones
             (clientsocket, address) = serversocket.accept()
             log_server.flush()
 
-            # now do something with the clientsocket
-            # in this case, we'll pretend this is a threaded server
+            # asigna la solicitud a uno de los hilos del pool
+            # para poder seguir aceptando más conexiones
             pool.apply_async(process_petition, (clientsocket, cola,))
-
-    # exiting the 'with'-block has stopped the pool
-    print("Now the pool is closed and no longer available")
+    main()
+### referencias  ###
+    # Referencia 1
+        # la funcionalidad para evitar conflictos al utilizar varios hilos el mismo archivo se basó en lo propuesto
+        # en http://stackoverflow.com/questions/13446445/python-multiprocessing-safely-writing-to-a-file
+    # Referencia 2:
+        # Lo referente al pool de hilos, y sobre todo a los sockets fue basado en los ejemplos propuestos
+        # en la documentación oficial de python: https://docs.python.org/3.4/howto/sockets.html
