@@ -115,10 +115,6 @@ GET, 1460717171, 127.0.0.1, 127.0.0.1, http://127.0.0.1:8080/, /img/logo.png,
 
 9-)
 
-![CasoPrueba9-get-form](capturas/captura9-get-form.png)
+![CasoPrueba9-get](capturas/captura9-get.png)
 
-![CasoPrueba9-get-vars](capturas/captura9-get-vars.png)
-
-![CasoPrueba9-post-form](capturas/captura9-post-form.png)
-
-![CasoPrueba9-post-vars](capturas/captura9-post-vars.png)
+![CasoPrueba9-post](capturas/captura9-post.png)
