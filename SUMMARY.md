@@ -13,5 +13,5 @@
    * [Mime-Types](docs/uso/MimeTypes.md)
    * [Opciones de configuración](docs/uso/Configuracion.md)
    * [Configuración de CGI](docs/uso/Cgi.md)
-   * [Consideraciones al escribir rutas](uso/ConsideracionesRuas)
+   * [Consideraciones al escribir rutas](uso/ConsideracionesRutas.md)
 
