@@ -1,7 +1,7 @@
 
 # Resultados de los casos de prueba
 
-1.
+1-)
 ```
 HTTP/1.1 200 OK
 Content-Type: text/html; charset=utf-8
@@ -21,17 +21,16 @@ Content-Length: 201
     </body>
 </html>
 ```
-2.
+2-)
 ```
 HTTP/1.1 406 Not Acceptable
 Content-Type: text/html; charset=utf-8
 Date: Fri, 15 Apr 2016 10:06:37 GMT
 Server: ErickMRServer/0.5
 Content-Length: 0
-
-
 ```
-3. 
+3-) 
+
 ```
 Warning: Setting custom HTTP method to HEAD may not work the way you want.
 HTTP/1.1 200 OK
@@ -42,7 +41,7 @@ Content-Length: 201
 
 curl: (18) transfer closed with 201 bytes remaining to read
 ```
-4. 
+4-) 
 ```
 HTTP/1.1 404 Not Found
 Date: Fri, 15 Apr 2016 10:08:15 GMT
@@ -50,7 +49,7 @@ Server: ErickMRServer/0.5
 Content-Length: 0
 
 ```
-5. 
+5-)
 ```
 HTTP/1.1 200 OK
 Content-Type: text/html; charset=utf-8
@@ -69,7 +68,7 @@ Content-Length: 201
     </body>
 </html>
 ```
-6. 
+6-) 
 ```
 HTTP/1.1 200 OK
 Content-Type: text/html; charset=utf-8
