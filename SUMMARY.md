@@ -10,7 +10,7 @@
 * [Manual de uso](docs/uso/manual_uso.md)
    * [Requerimientos](docs/uso/Requerimientos.md)
    * [Ejecución del servidor](docs/uso/Ejecucion.md)
+   * [Configuración de CGI](docs/uso/Cgi.md)
    * [Mime-Types](docs/uso/MimeTypes.md)
    * [Opciones de configuración](docs/uso/Configuracion.md)
-   * [Configuración de CGI](docs/uso/Cgi.md)
 
