@@ -7,7 +7,7 @@
    * [Casos de prueba](docs/CasosPrueba.md)
    * [Resultados de los casos de prueba](docs/ResultadosCasosPrueba.md)
    * [Análisis de los resultados de las pruebas](docs/AnalisisResultados.md)
-* Manual de uso
+* [Manual de uso](docs/uso/manual_uso.md)
    * [Requerimientos](docs/uso/Requerimientos.md)
    * [Ejecución del servidor](docs/uso/Ejecucion.md)
    * [Opciones de configuración](docs/uso/Configuracion.md)
