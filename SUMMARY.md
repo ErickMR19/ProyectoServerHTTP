@@ -1,4 +1,4 @@
-# Summary
+# Tabla de Contenido
 
 * [Introduction](INTRO.md)
 * [Manual de diseño](docs/manual_diseno.md)
@@ -13,5 +13,4 @@
    * [Opciones de configuración](docs/uso/Configuracion.md)
    * [Mime-Types](docs/uso/MimeTypes.md)
    * [Configuración de CGI](docs/uso/Cgi.md)
-* [Glosario](GLOSSARY.md)
 
