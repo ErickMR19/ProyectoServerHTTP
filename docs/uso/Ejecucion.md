@@ -9,4 +9,4 @@ Otra forma es pasarle la ruta del script al ejecutable de Python 3 como argument
 
 ---
 
-**Nota importante:** para la ejecución se requiere que al menos el archivo que tenga definidos los [MIME-TYPES](MimeTypes.md) 
+**Nota importante:** para la ejecución se requiere que al menos el archivo que tenga definidos los mime-types. Más información en [MIME-TYPES](MimeTypes.md).
