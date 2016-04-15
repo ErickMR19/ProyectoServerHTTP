@@ -12,10 +12,11 @@ En la bitácora se registra la solicitud de la manera esperada.
 
 5-) Muy similar al caso 1. En este caso se realiza una solicitud con el método POST. Se reciben los mismos encabezados y cuerpo del mensaje. Esto es lo esperado, dado que lo que se envía no genera ningún cambio. Sin embargo se verifica que se recibe el cuerpo de la solicitud de manera correcta, verificando el texto de la bitácora.
 
-6-)
+6-) Igual que el caso 6, solo que en este caso el método es GET, y por ello los datos se envían en la URL. De la misma manera, se verifica esto en el texto de la bitácora.
 
-7-)
+7-) Se verifica que el servidor comprende correctamente la solicitud proveniente desde un navegador. Además al recuperar una imagen incrustada, se puede verificar en la bitácora el campo *Referer* de la cabecera.
 
-8-)
 
-9-)
+8-) Se verifica que el CGI de PHP trabaje correctamente. Se recupera un archivo que llama a la función ```phpinfo()``` la cual despliega la información de configuración y estado de PHP. Al recibirse estos datos de manera correcta, se llega a que funciona de manera correcta.
+
+9-) Se accede a un formulario básico HTML, el cual envía los datos ingresados a un archivo PHP. Este muestra todas las variables asignadas que tiene tanto por GET como por POST. El formulario permite escoger el método de envío. Se realizó una prueba con cada uno. Se obtienen los resultados esperados, mostrando el valor de las variables recibidas según el método seleccionado. 
