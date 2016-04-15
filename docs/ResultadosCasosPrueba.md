@@ -96,12 +96,18 @@ Content-Length: 201
     </body>
 </html>
 ```
-```GET, #, 127.0.0.1, 127.0.0.1, , /index.html, name=Erick
+```
+GET, #, 127.0.0.1, 127.0.0.1, , /index.html, name=Erick
 ```
 
 7-)
 
 ![CasoPrueba7](capturas/captura7.png)
+
+```
+GET, 1460717171, 127.0.0.1, 127.0.0.1, , /, 
+GET, 1460717171, 127.0.0.1, 127.0.0.1, http://127.0.0.1:8080/, /img/logo.png, 
+```
 
 8-)
 
