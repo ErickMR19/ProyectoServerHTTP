@@ -14,11 +14,11 @@ A el servidor se le pueden proveer algunas opciones configurables en una archivo
   </tr>
     <td>port_listening</td><td>Puerto en el cual se escucharan los solicitudes</td><td>String</td><tr>
   <tr>
-    <td>ip_listening</td><td>Dirección en la cual se en</td><td>String</td><tr>
+    <td>ip_listening</td><td>Dirección en la cual se escucharán las solicitudes (cadena vacía [""] indica que se escuche en todas las direcciones asignadas al equipo)</td><td>String</td><tr>
   </tr>
-    <td>default_index</td><td></td><td>Lista de String</td>
+    <td>default_index</td><td>Nombres de los archivo que se usarán en caso de solicitarse una carpeta</td><td>Lista de String</td>
   </tr>
   <tr>
-    <td>cgi_file</td><td></td><td>String</td>
+    <td>cgi_file</td><td>Indica el nombre del archivo donde está la configuración de <a href="Cgi.md">CGI</a></td><td>String</td>
   </tr>
 </table>
