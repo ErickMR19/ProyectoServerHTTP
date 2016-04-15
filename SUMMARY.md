@@ -1,6 +1,6 @@
 # Tabla de Contenido
 
-* [Introduction](INTRO.md)
+* [Introducción](INTRO.md)
 * [Manual de diseño](docs/manual_diseno.md)
    * [Análisis del problema](docs/AnalisisProblema.md)
    * [Diagramas de flujo](docs/DiagramasFlujo.md)
