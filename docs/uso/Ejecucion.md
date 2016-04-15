@@ -5,8 +5,6 @@ Para ejecutar el servidor, se puede dar doble click al archivo *server.py* si se
 
 Otra forma es pasarle la ruta del script al ejecutable de Python 3 como argumento.
 
-
-
 ---
 
 **Nota importante:** para la ejecución se requiere que al menos el archivo que tenga definidos los mime-types. Más información en [MIME-TYPES](MimeTypes.md).
