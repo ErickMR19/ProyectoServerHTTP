@@ -14,5 +14,5 @@
    * [Opciones de configuración](docs/uso/Configuracion.md)
    * [Configuración de CGI](docs/uso/Cgi.md)
    * [Consideraciones al escribir rutas](docs/uso/ConsideracionesRutas.md)
-   * Bitácoras
+   * [Bitácoras](docs/uso/bitacoras.md)
 
