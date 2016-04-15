@@ -6,18 +6,20 @@ Por la configuración del servidor en todos los casos, está escuchando en el pu
 
 1. curl -i http://127.0.0.1:8080/
 
-2. curl -i -H "Accept: image/png" http://127.0.0.1:8080/index.html
+2. curl -i -H "Accept: image/png" http://127.0.0.1:8080/form.html
 
 3. curl -i -X HEAD http://127.0.0.1:8080/index.html
 
-4. curl -i -X POST -d "mensaje=Hola+Mundo" http://127.0.0.1:8080/index.html
+4. curl -i http://127.0.0.1:8080/archivonoexistente.html
 
-5. curl -i http://127.0.0.1:8080/index.html?name=Erick
+5. curl -i -X POST -d "mensaje=Hola+Mundo" http://127.0.0.1:8080/index.html
+
+6. curl -i http://127.0.0.1:8080/index.html?name=Erick
 
 Se realizan otras pruebas más funcionales, donde se evalúa su experiencia desde un navegador.
 
-6. Visitar http://127.0.0.1:8080/
+7. Visitar http://127.0.0.1:8080/
 
-7. Visitar http://127.0.0.1:8080/info.php
+8. Visitar http://127.0.0.1:8080/info.php
 
-8. Visitar http://127.0.0.1:8080/form.html
+9. Visitar http://127.0.0.1:8080/form.html
