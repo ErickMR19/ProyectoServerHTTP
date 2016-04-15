@@ -21,8 +21,7 @@ Content-Length: 201
     </body>
 </html>
 ```
-
-2. 
+2.
 ```
 HTTP/1.1 406 Not Acceptable
 Content-Type: text/html; charset=utf-8
@@ -32,7 +31,6 @@ Content-Length: 0
 
 
 ```
-
 3. 
 ```
 Warning: Setting custom HTTP method to HEAD may not work the way you want.
@@ -44,7 +42,6 @@ Content-Length: 201
 
 curl: (18) transfer closed with 201 bytes remaining to read
 ```
-
 4. 
 ```
 HTTP/1.1 404 Not Found
@@ -53,7 +50,6 @@ Server: ErickMRServer/0.5
 Content-Length: 0
 
 ```
-
 5. 
 ```
 HTTP/1.1 200 OK
@@ -73,7 +69,6 @@ Content-Length: 201
     </body>
 </html>
 ```
-
 6. 
 ```
 HTTP/1.1 200 OK
